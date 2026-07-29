@@ -28,6 +28,13 @@
 #define SCREEN_HEIGHT 240
 #define LVGL_TICK_PERIOD_MS 5
 
-// --- Status LED (WS2812, single pixel, behind the panel) ---
-#define WS2812_PIN 4
-#define WS2812_LED_COUNT 1
+// --- Status LED (discrete 5050 RGB LED behind the panel, active-low: LOW
+// turns a channel ON, HIGH turns it OFF) ---
+#define RGB_LED_RED_PIN 4
+#define RGB_LED_GREEN_PIN 16
+#define RGB_LED_BLUE_PIN 17
+#define RGB_LED_RED_CHANNEL 0
+#define RGB_LED_GREEN_CHANNEL 1
+#define RGB_LED_BLUE_CHANNEL 2
+#define RGB_LED_PWM_FREQ_HZ 5000
+#define RGB_LED_PWM_RESOLUTION_BITS 8

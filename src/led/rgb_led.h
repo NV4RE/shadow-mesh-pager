@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-// Drives the single WS2812 status LED behind the panel (see config.h for
-// pin/count).
+// Drives the discrete 3-channel RGB LED behind the panel via PWM (see
+// config.h for pins/channels).
 namespace rgb_led {
 
 void begin();
