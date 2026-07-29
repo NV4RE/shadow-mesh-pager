@@ -1,0 +1,42 @@
+#include <Arduino.h>
+
+#include "console/serial_console.h"
+#include "display/display_driver.h"
+#include "network/mesh_manager.h"
+#include "storage/settings_store.h"
+#include "ui/setup_wizard.h"
+#include "ui/ui_manager.h"
+
+namespace {
+
+void startMainUI() { ui::begin(); }
+
+} // namespace
+
+void setup() {
+    Serial.begin(115200);
+
+    display::begin();
+    settings::begin();
+    meshManager.begin();
+    serial_console::begin();
+
+    if (settings::isSetupComplete()) {
+        settings::TouchCalibration cal = settings::getCalibration();
+        display::setCalibration(cal.xMin, cal.xMax, cal.yMin, cal.yMax);
+        meshManager.setIdentity(settings::getHandle(), settings::getName());
+        meshManager.setChannelKey(settings::getNetworkKey());
+        startMainUI();
+    } else {
+        // The touchscreen wizard runs regardless; on a screenless board it
+        // simply never completes (no taps ever arrive), which is harmless --
+        // use the serial console's /handle, /name and /key commands instead.
+        setup_wizard::run(startMainUI);
+    }
+}
+
+void loop() {
+    meshManager.update();
+    display::tick();
+    serial_console::tick();
+}
