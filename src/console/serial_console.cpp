@@ -2,7 +2,9 @@
 
 #include <Arduino.h>
 
+#ifdef HAS_RGB_LED
 #include "../led/rgb_led.h"
+#endif
 #include "../message/message.h"
 #include "../network/mesh_manager.h"
 #include "../storage/settings_store.h"
@@ -50,7 +52,9 @@ void printHelp() {
     Serial.println(F("  /whoami            show your node id / name / channel status"));
     Serial.println(F("  /name <text>       set your display name (shown next to your messages)"));
     Serial.println(F("  /key <text>        set the shared channel (network) key"));
+#ifdef HAS_RGB_LED
     Serial.println(F("  /led <hex>          set the status LED color, e.g. /led ff8800"));
+#endif
     Serial.println(F("  /emojis            list available emoji codes"));
     Serial.println(F("  /emoji <code>      send an emoji, e.g. /emoji :wave:"));
     Serial.println(F("  /topology          list known mesh nodes"));
@@ -125,6 +129,7 @@ void handleCommand(const String &line) {
         settings::markSetupComplete();
         meshManager.setChannelKey(arg);
         Serial.println("[ok] channel key set");
+#ifdef HAS_RGB_LED
     } else if (cmd == "/led") {
         if (arg.length() == 0 || arg.length() > 6) {
             Serial.println("[err] usage: /led <hex, e.g. ff8800>");
@@ -134,6 +139,7 @@ void handleCommand(const String &line) {
             rgb_led::setColorHex(rgb);
             Serial.printf("[ok] LED set to #%06X\n", static_cast<unsigned int>(rgb));
         }
+#endif
     } else if (cmd == "/emojis") {
         printEmojiTable();
     } else if (cmd == "/emoji") {
