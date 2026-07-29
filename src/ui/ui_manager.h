@@ -2,9 +2,9 @@
 
 namespace ui {
 
-enum class Screen { Messages, Compose, Topology, Settings };
+enum class Screen { Messages, Compose, Topology, Led, Settings };
 
-// Builds all four screens (once) and shows Messages.
+// Builds all screens (once) and shows Messages.
 void begin();
 void show(Screen s);
 

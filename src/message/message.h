@@ -15,9 +15,8 @@ struct Message {
     bool decryptable = false;         // false => this node's channel key didn't match
     String body;                      // decrypted plaintext, or emoji short-code
 
-    // Sender identity, plaintext on the wire by design (like a callsign) so
-    // it's visible even to nodes that can't decrypt the body.
-    String handle;
+    // Sender's display name, plaintext on the wire by design so it's
+    // visible even to nodes that can't decrypt the body.
     String name;
 
     // Generates a fresh id and serializes to the wire JSON envelope,

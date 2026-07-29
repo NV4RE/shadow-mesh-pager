@@ -15,13 +15,14 @@ void begin() { prefs.begin(NVS_NAMESPACE, false); }
 bool isSetupComplete() { return prefs.getBool("setup_done", false); }
 void markSetupComplete() { prefs.putBool("setup_done", true); }
 
-String getHandle() { return prefs.getString("handle", ""); }
 String getName() { return prefs.getString("name", ""); }
 String getNetworkKey() { return prefs.getString("netkey", ""); }
 
-void setHandle(const String &handle) { prefs.putString("handle", handle); }
 void setName(const String &name) { prefs.putString("name", name); }
 void setNetworkKey(const String &key) { prefs.putString("netkey", key); }
+
+uint32_t getLedColor() { return prefs.getUInt("led_color", 0); }
+void setLedColor(uint32_t rgb) { prefs.putUInt("led_color", rgb); }
 
 TouchCalibration getCalibration() {
     TouchCalibration cal;

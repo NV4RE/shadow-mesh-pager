@@ -39,18 +39,15 @@ public:
     void setChannelKey(const String &passphrase);
     bool hasChannelKey() const { return hasKey_; }
 
-    // Handle = short user-chosen id shown next to messages/topology (e.g.
-    // "WE7"); name = longer free-text display name. Stamped in the clear on
-    // every outgoing message (see message.h) -- decoupled from AES channel
-    // readability, same as a radio callsign.
-    void setIdentity(const String &handle, const String &name);
-    String selfHandle() const { return handle_; }
+    // Display name, stamped in the clear on every outgoing message (see
+    // message.h) -- decoupled from AES channel readability.
+    void setIdentity(const String &name);
     String selfName() const { return name_; }
 
-    // Best-effort cache of node id -> handle, learned from messages seen so
+    // Best-effort cache of node id -> name, learned from messages seen so
     // far (there's no separate presence/announce protocol). Empty if this
     // node hasn't been heard from yet.
-    String handleForNode(uint32_t nodeId) const;
+    String nameForNode(uint32_t nodeId) const;
 
     void sendMessage(MessageType type, const String &body);
 
@@ -80,12 +77,11 @@ private:
     painlessMesh mesh_;
     crypto::AesKey channelKey_{};
     bool hasKey_ = false;
-    String handle_;
     String name_;
 
     std::deque<Message> history_;
     std::deque<String> seenIds_;
-    std::map<uint32_t, String> nodeHandles_;
+    std::map<uint32_t, String> nodeNames_;
 
     std::vector<MessageCallback> onMessageListeners_;
     TopologyCallback onTopologyChanged_;

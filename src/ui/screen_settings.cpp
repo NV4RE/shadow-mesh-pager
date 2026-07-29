@@ -12,7 +12,6 @@ namespace screen_settings {
 namespace {
 
 lv_obj_t *nodeIdLabel = nullptr;
-lv_obj_t *handleTextarea = nullptr;
 lv_obj_t *nameTextarea = nullptr;
 lv_obj_t *keyTextarea = nullptr;
 lv_obj_t *keyboard = nullptr;
@@ -30,16 +29,14 @@ void keyboardFocusEventCb(lv_event_t *e) {
 }
 
 void saveEventCb(lv_event_t *e) {
-    String handle = lv_textarea_get_text(handleTextarea);
     String name = lv_textarea_get_text(nameTextarea);
     String key = lv_textarea_get_text(keyTextarea);
 
-    settings::setHandle(handle);
     settings::setName(name);
     settings::setNetworkKey(key);
     settings::markSetupComplete();
 
-    meshManager.setIdentity(handle, name);
+    meshManager.setIdentity(name);
     meshManager.setChannelKey(key);
 
     refresh();
@@ -77,7 +74,6 @@ lv_obj_t *create(lv_obj_t *parent) {
 
     nodeIdLabel = lv_label_create(root);
 
-    handleTextarea = addField(root, "Handle (short id, e.g. WE7):", "Handle", false);
     nameTextarea = addField(root, "Name:", "Name", false);
     keyTextarea = addField(root, "Channel key (shared with your group):", "Network key", true);
 
@@ -96,7 +92,7 @@ lv_obj_t *create(lv_obj_t *parent) {
     statusLabel = lv_label_create(root);
 
     // See screen_compose.cpp: IGNORE_LAYOUT + bottom alignment keeps this
-    // out of root's flex-column flow, which (with the id label, 3 text
+    // out of root's flex-column flow, which (with the id label, 2 text
     // fields, and 2 buttons above it) is already taller than the visible
     // content area -- as a normal flex child the keyboard rendered scrolled
     // off-screen instead of visibly popping up.
@@ -115,7 +111,6 @@ void refresh() {
         return;
     }
     lv_label_set_text_fmt(nodeIdLabel, "Node ID: %08X", static_cast<unsigned int>(meshManager.selfId()));
-    lv_textarea_set_text(handleTextarea, settings::getHandle().c_str());
     lv_textarea_set_text(nameTextarea, settings::getName().c_str());
     lv_textarea_set_text(keyTextarea, settings::getNetworkKey().c_str());
     lv_label_set_text_fmt(statusLabel, "Channel key: %s", meshManager.hasChannelKey() ? "set" : "not set");

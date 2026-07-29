@@ -2,6 +2,7 @@
 
 #include "console/serial_console.h"
 #include "display/display_driver.h"
+#include "led/rgb_led.h"
 #include "network/mesh_manager.h"
 #include "storage/settings_store.h"
 #include "ui/setup_wizard.h"
@@ -18,19 +19,21 @@ void setup() {
 
     display::begin();
     settings::begin();
+    rgb_led::begin();
+    rgb_led::setColorHex(settings::getLedColor());
     meshManager.begin();
     serial_console::begin();
 
     if (settings::isSetupComplete()) {
         settings::TouchCalibration cal = settings::getCalibration();
         display::setCalibration(cal.xMin, cal.xMax, cal.yMin, cal.yMax);
-        meshManager.setIdentity(settings::getHandle(), settings::getName());
+        meshManager.setIdentity(settings::getName());
         meshManager.setChannelKey(settings::getNetworkKey());
         startMainUI();
     } else {
         // The touchscreen wizard runs regardless; on a screenless board it
         // simply never completes (no taps ever arrive), which is harmless --
-        // use the serial console's /handle, /name and /key commands instead.
+        // use the serial console's /name and /key commands instead.
         setup_wizard::run(startMainUI);
     }
 }

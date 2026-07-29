@@ -30,8 +30,8 @@ String senderLabel(const Message &msg) {
     if (msg.from == meshManager.selfId()) {
         return "me";
     }
-    if (msg.handle.length() > 0) {
-        return msg.handle;
+    if (msg.name.length() > 0) {
+        return msg.name;
     }
     return formatNodeId(msg.from);
 }

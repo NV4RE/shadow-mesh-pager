@@ -3,6 +3,7 @@
 #include <lvgl.h>
 
 #include "screen_compose.h"
+#include "screen_led.h"
 #include "screen_messages.h"
 #include "screen_settings.h"
 #include "screen_topology.h"
@@ -17,6 +18,7 @@ lv_obj_t *navBar = nullptr;
 lv_obj_t *messagesScreen = nullptr;
 lv_obj_t *composeScreen = nullptr;
 lv_obj_t *topologyScreen = nullptr;
+lv_obj_t *ledScreen = nullptr;
 lv_obj_t *settingsScreen = nullptr;
 
 void navButtonEventCb(lv_event_t *e) {
@@ -57,11 +59,13 @@ void begin() {
     addNavButton(navBar, "Msgs", Screen::Messages);
     addNavButton(navBar, "Send", Screen::Compose);
     addNavButton(navBar, "Map", Screen::Topology);
+    addNavButton(navBar, "LED", Screen::Led);
     addNavButton(navBar, "Setup", Screen::Settings);
 
     messagesScreen = screen_messages::create(content);
     composeScreen = screen_compose::create(content);
     topologyScreen = screen_topology::create(content);
+    ledScreen = screen_led::create(content);
     settingsScreen = screen_settings::create(content);
 
     show(Screen::Messages);
@@ -71,6 +75,7 @@ void show(Screen s) {
     lv_obj_add_flag(messagesScreen, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(composeScreen, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(topologyScreen, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ledScreen, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(settingsScreen, LV_OBJ_FLAG_HIDDEN);
 
     switch (s) {
@@ -84,6 +89,10 @@ void show(Screen s) {
         case Screen::Topology:
             lv_obj_clear_flag(topologyScreen, LV_OBJ_FLAG_HIDDEN);
             screen_topology::refresh();
+            break;
+        case Screen::Led:
+            lv_obj_clear_flag(ledScreen, LV_OBJ_FLAG_HIDDEN);
+            screen_led::refresh();
             break;
         case Screen::Settings:
             lv_obj_clear_flag(settingsScreen, LV_OBJ_FLAG_HIDDEN);

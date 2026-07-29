@@ -12,9 +12,9 @@ namespace setup_wizard {
 
 namespace {
 
-enum class Step { Handle, Name, NetworkKey };
+enum class Step { Name, NetworkKey };
 
-Step step = Step::Handle;
+Step step = Step::Name;
 CompleteCallback onComplete;
 
 lv_obj_t *root = nullptr;
@@ -22,7 +22,6 @@ lv_obj_t *titleLabel = nullptr;
 lv_obj_t *textarea = nullptr;
 lv_obj_t *keyboard = nullptr;
 
-String handleValue;
 String nameValue;
 String keyValue;
 
@@ -46,12 +45,11 @@ void keyboardFocusEventCb(lv_event_t *e) {
 }
 
 void finishWizard() {
-    settings::setHandle(handleValue);
     settings::setName(nameValue);
     settings::setNetworkKey(keyValue);
     settings::markSetupComplete();
 
-    meshManager.setIdentity(handleValue, nameValue);
+    meshManager.setIdentity(nameValue);
     meshManager.setChannelKey(keyValue);
 
     teardown();
@@ -67,11 +65,6 @@ void nextEventCb(lv_event_t *e) {
     String text = lv_textarea_get_text(textarea);
 
     switch (step) {
-        case Step::Handle:
-            handleValue = text;
-            step = Step::Name;
-            showTextStep();
-            break;
         case Step::Name:
             nameValue = text;
             step = Step::NetworkKey;
@@ -94,10 +87,6 @@ void showTextStep() {
     titleLabel = lv_label_create(root);
     const char *placeholder = "";
     switch (step) {
-        case Step::Handle:
-            lv_label_set_text(titleLabel, "Pick a short handle (e.g. WE7)");
-            placeholder = "Handle";
-            break;
         case Step::Name:
             lv_label_set_text(titleLabel, "Enter your name");
             placeholder = "Name";
@@ -134,7 +123,7 @@ void onCalibrationDone(const settings::TouchCalibration &cal) {
     settings::setCalibration(cal);
     display::setCalibration(cal.xMin, cal.xMax, cal.yMin, cal.yMax);
 
-    step = Step::Handle;
+    step = Step::Name;
     showTextStep();
 }
 
@@ -142,7 +131,6 @@ void onCalibrationDone(const settings::TouchCalibration &cal) {
 
 void run(CompleteCallback cb) {
     onComplete = std::move(cb);
-    handleValue = "";
     nameValue = "";
     keyValue = "";
 

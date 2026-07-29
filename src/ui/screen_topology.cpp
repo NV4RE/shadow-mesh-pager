@@ -48,11 +48,11 @@ void refresh() {
 
         String text;
         if (id == meshManager.selfId()) {
-            String h = meshManager.selfHandle();
-            text = String(idBuf) + " (you" + (h.length() > 0 ? " - " + h : String("")) + ")";
+            String n = meshManager.selfName();
+            text = String(idBuf) + " (you" + (n.length() > 0 ? " - " + n : String("")) + ")";
         } else {
-            String h = meshManager.handleForNode(id);
-            String suffix = h.length() > 0 ? " (" + h + ")" : String("");
+            String n = meshManager.nameForNode(id);
+            String suffix = n.length() > 0 ? " (" + n + ")" : String("");
             text = String(idBuf) + suffix + " -- " + (meshManager.isConnected(id) ? "direct" : "via relay");
         }
         lv_label_set_text(row, text.c_str());

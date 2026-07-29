@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "../led/rgb_led.h"
 #include "../message/message.h"
 #include "../network/mesh_manager.h"
 #include "../storage/settings_store.h"
@@ -25,8 +26,8 @@ String senderLabel(const Message &msg) {
     if (msg.from == meshManager.selfId()) {
         return "me";
     }
-    if (msg.handle.length() > 0) {
-        return msg.handle;
+    if (msg.name.length() > 0) {
+        return msg.name;
     }
     char buf[10];
     snprintf(buf, sizeof(buf), "%08X", static_cast<unsigned int>(msg.from));
@@ -46,10 +47,10 @@ void printMessage(const Message &msg) {
 void printHelp() {
     Serial.println(F("World End SMS serial console. Commands:"));
     Serial.println(F("  /help              show this help"));
-    Serial.println(F("  /whoami            show your node id / handle / name / channel status"));
-    Serial.println(F("  /handle <text>     set your short handle (shown next to your messages)"));
-    Serial.println(F("  /name <text>       set your display name"));
+    Serial.println(F("  /whoami            show your node id / name / channel status"));
+    Serial.println(F("  /name <text>       set your display name (shown next to your messages)"));
     Serial.println(F("  /key <text>        set the shared channel (network) key"));
+    Serial.println(F("  /led <hex>          set the status LED color, e.g. /led ff8800"));
     Serial.println(F("  /emojis            list available emoji codes"));
     Serial.println(F("  /emoji <code>      send an emoji, e.g. /emoji :wave:"));
     Serial.println(F("  /topology          list known mesh nodes"));
@@ -58,17 +59,17 @@ void printHelp() {
 }
 
 void printWhoami() {
-    Serial.printf("[me] node=%08X handle=\"%s\" name=\"%s\" channel_key=%s\n",
-                  static_cast<unsigned int>(meshManager.selfId()), settings::getHandle().c_str(),
-                  settings::getName().c_str(), meshManager.hasChannelKey() ? "set" : "not set");
+    Serial.printf("[me] node=%08X name=\"%s\" channel_key=%s\n",
+                  static_cast<unsigned int>(meshManager.selfId()), settings::getName().c_str(),
+                  meshManager.hasChannelKey() ? "set" : "not set");
 }
 
 void printTopology() {
     char selfBuf[10];
     snprintf(selfBuf, sizeof(selfBuf), "%08X", static_cast<unsigned int>(meshManager.selfId()));
-    String selfHandle = meshManager.selfHandle();
+    String selfName = meshManager.selfName();
     Serial.printf("[net] me: %s%s\n", selfBuf,
-                   selfHandle.length() > 0 ? (" (" + selfHandle + ")").c_str() : "");
+                   selfName.length() > 0 ? (" (" + selfName + ")").c_str() : "");
 
     for (uint32_t id : meshManager.nodeIds()) {
         if (id == meshManager.selfId()) {
@@ -76,8 +77,8 @@ void printTopology() {
         }
         char idBuf[10];
         snprintf(idBuf, sizeof(idBuf), "%08X", static_cast<unsigned int>(id));
-        String h = meshManager.handleForNode(id);
-        Serial.printf("[net] %s%s -- %s\n", idBuf, h.length() > 0 ? (" (" + h + ")").c_str() : "",
+        String n = meshManager.nameForNode(id);
+        Serial.printf("[net] %s%s -- %s\n", idBuf, n.length() > 0 ? (" (" + n + ")").c_str() : "",
                        meshManager.isConnected(id) ? "direct" : "via relay");
     }
 }
@@ -114,21 +115,25 @@ void handleCommand(const String &line) {
         printHelp();
     } else if (cmd == "/whoami") {
         printWhoami();
-    } else if (cmd == "/handle") {
-        settings::setHandle(arg);
-        settings::markSetupComplete();
-        meshManager.setIdentity(arg, settings::getName());
-        Serial.printf("[ok] handle set to \"%s\"\n", arg.c_str());
     } else if (cmd == "/name") {
         settings::setName(arg);
         settings::markSetupComplete();
-        meshManager.setIdentity(settings::getHandle(), arg);
+        meshManager.setIdentity(arg);
         Serial.printf("[ok] name set to \"%s\"\n", arg.c_str());
     } else if (cmd == "/key") {
         settings::setNetworkKey(arg);
         settings::markSetupComplete();
         meshManager.setChannelKey(arg);
         Serial.println("[ok] channel key set");
+    } else if (cmd == "/led") {
+        if (arg.length() == 0 || arg.length() > 6) {
+            Serial.println("[err] usage: /led <hex, e.g. ff8800>");
+        } else {
+            uint32_t rgb = strtoul(arg.c_str(), nullptr, 16);
+            settings::setLedColor(rgb);
+            rgb_led::setColorHex(rgb);
+            Serial.printf("[ok] LED set to #%06X\n", static_cast<unsigned int>(rgb));
+        }
     } else if (cmd == "/emojis") {
         printEmojiTable();
     } else if (cmd == "/emoji") {

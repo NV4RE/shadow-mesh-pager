@@ -27,3 +27,7 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 #define LVGL_TICK_PERIOD_MS 5
+
+// --- Status LED (WS2812, single pixel, behind the panel) ---
+#define WS2812_PIN 4
+#define WS2812_LED_COUNT 1

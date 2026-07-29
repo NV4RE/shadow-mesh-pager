@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-// Persists device configuration -- touch calibration, user handle/name,
+// Persists device configuration -- touch calibration, user display name,
 // network channel key, and whether first-boot setup has run -- via ESP32
 // NVS (Preferences). This is separate from message history, which stays
 // in-RAM only per spec.
@@ -20,12 +20,13 @@ void begin();
 bool isSetupComplete();
 void markSetupComplete();
 
-String getHandle();
 String getName();
 String getNetworkKey();
-void setHandle(const String &handle);
 void setName(const String &name);
 void setNetworkKey(const String &key);
+
+uint32_t getLedColor(); // 0xRRGGBB, defaults to off (0)
+void setLedColor(uint32_t rgb);
 
 TouchCalibration getCalibration();
 void setCalibration(const TouchCalibration &cal);

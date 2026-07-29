@@ -19,17 +19,16 @@ void MeshManager::setChannelKey(const String &passphrase) {
     hasKey_ = passphrase.length() > 0;
 }
 
-void MeshManager::setIdentity(const String &handle, const String &name) {
-    handle_ = handle;
+void MeshManager::setIdentity(const String &name) {
     name_ = name;
-    if (handle_.length() > 0) {
-        nodeHandles_[mesh_.getNodeId()] = handle_;
+    if (name_.length() > 0) {
+        nodeNames_[mesh_.getNodeId()] = name_;
     }
 }
 
-String MeshManager::handleForNode(uint32_t nodeId) const {
-    auto it = nodeHandles_.find(nodeId);
-    return it == nodeHandles_.end() ? String() : it->second;
+String MeshManager::nameForNode(uint32_t nodeId) const {
+    auto it = nodeNames_.find(nodeId);
+    return it == nodeNames_.end() ? String() : it->second;
 }
 
 void MeshManager::sendMessage(MessageType type, const String &body) {
@@ -38,7 +37,6 @@ void MeshManager::sendMessage(MessageType type, const String &body) {
     msg.ts = static_cast<uint32_t>(millis());
     msg.type = type;
     msg.body = body;
-    msg.handle = handle_;
     msg.name = name_;
 
     String wire = Message::toWireJson(msg, channelKey_);
@@ -60,8 +58,8 @@ void MeshManager::handleReceive(uint32_t from, String &json) {
         return; // flood-rebroadcast duplicate
     }
     remember(msg.id);
-    if (msg.handle.length() > 0) {
-        nodeHandles_[msg.from] = msg.handle;
+    if (msg.name.length() > 0) {
+        nodeNames_[msg.from] = msg.name;
     }
     pushHistory(msg);
     notifyMessage(msg);

@@ -64,7 +64,6 @@ String Message::toWireJson(Message &msg, const crypto::AesKey &key) {
     doc["from"] = msg.from;
     doc["ts"] = msg.ts;
     doc["type"] = typeToString(msg.type);
-    doc["h"] = msg.handle;
     doc["n"] = msg.name;
     doc["iv"] = base64Encode(std::vector<uint8_t>(enc.iv, enc.iv + AES_IV_LEN));
     doc["ct"] = base64Encode(enc.ciphertext);
@@ -89,7 +88,6 @@ bool Message::fromWireJson(const String &json, const crypto::AesKey &key, Messag
     out.from = doc["from"] | 0UL;
     out.ts = doc["ts"] | 0UL;
     out.type = typeFromString(doc["type"] | "text");
-    out.handle = doc["h"] | "";
     out.name = doc["n"] | "";
 
     std::vector<uint8_t> iv = base64Decode(doc["iv"].as<String>());
