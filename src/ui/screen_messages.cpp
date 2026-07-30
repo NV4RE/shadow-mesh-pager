@@ -17,15 +17,6 @@ String formatNodeId(uint32_t id) {
     return String(buf);
 }
 
-const char *emojiGlyph(const String &code) {
-    for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-        if (code == EMOJI_TABLE[i].code) {
-            return EMOJI_TABLE[i].glyph;
-        }
-    }
-    return code.c_str();
-}
-
 String senderLabel(const Message &msg) {
     if (msg.from == meshManager.selfId()) {
         return "me";
@@ -53,8 +44,6 @@ void addRow(const Message &msg) {
 
     if (!msg.decryptable) {
         lv_label_set_text(body, "[undecryptable -- different channel key]");
-    } else if (msg.type == MessageType::Emoji) {
-        lv_label_set_text_fmt(body, "[%s]", emojiGlyph(msg.body));
     } else {
         lv_label_set_text(body, msg.body.c_str());
     }

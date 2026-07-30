@@ -90,7 +90,7 @@ void sendAndReset() {
     String toSend = decodedBuffer_;
     toSend.trim();
     if (toSend.length() > 0) {
-        meshManager.sendMessage(MessageType::Text, toSend);
+        meshManager.sendMessage(toSend);
         Serial.printf("[morse] sent: \"%s\"\n", toSend.c_str());
     }
     decodedBuffer_ = "";

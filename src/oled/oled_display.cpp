@@ -18,15 +18,6 @@ Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RST_PIN);
 String morseDecoded_;
 String morseSymbols_;
 
-const char *emojiGlyph(const String &code) {
-    for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-        if (code == EMOJI_TABLE[i].code) {
-            return EMOJI_TABLE[i].glyph;
-        }
-    }
-    return code.c_str();
-}
-
 String senderLabel(const Message &msg) {
     if (msg.from == meshManager.selfId()) {
         return "me";
@@ -42,9 +33,6 @@ String senderLabel(const Message &msg) {
 String bodyText(const Message &msg) {
     if (!msg.decryptable) {
         return "<undecryptable>";
-    }
-    if (msg.type == MessageType::Emoji) {
-        return "[" + String(emojiGlyph(msg.body)) + "]";
     }
     return msg.body;
 }

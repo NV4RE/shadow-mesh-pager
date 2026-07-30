@@ -27,14 +27,6 @@ std::vector<uint8_t> base64Decode(const String &text) {
     return buf;
 }
 
-const char *typeToString(MessageType type) {
-    return type == MessageType::Emoji ? "emoji" : "text";
-}
-
-MessageType typeFromString(const String &s) {
-    return s == "emoji" ? MessageType::Emoji : MessageType::Text;
-}
-
 } // namespace
 
 String generateMessageId() {
@@ -63,7 +55,6 @@ String Message::toWireJson(Message &msg, const crypto::AesKey &key) {
     doc["id"] = msg.id;
     doc["from"] = msg.from;
     doc["ts"] = msg.ts;
-    doc["type"] = typeToString(msg.type);
     doc["n"] = msg.name;
     doc["iv"] = base64Encode(std::vector<uint8_t>(enc.iv, enc.iv + AES_IV_LEN));
     doc["ct"] = base64Encode(enc.ciphertext);
@@ -87,7 +78,6 @@ bool Message::fromWireJson(const String &json, const crypto::AesKey &key, Messag
     out.id = doc["id"].as<String>();
     out.from = doc["from"] | 0UL;
     out.ts = doc["ts"] | 0UL;
-    out.type = typeFromString(doc["type"] | "text");
     out.name = doc["n"] | "";
 
     std::vector<uint8_t> iv = base64Decode(doc["iv"].as<String>());
@@ -103,13 +93,11 @@ bool Message::fromWireJson(const String &json, const crypto::AesKey &key, Messag
     return true;
 }
 
-const EmojiEntry EMOJI_TABLE[] = {
-    {":wave:", "Wave"},      {":smile:", "Smile"},    {":heart:", "Heart"},
-    {":thumbsup:", "+1"},    {":thumbsdown:", "-1"},  {":fire:", "Fire"},
-    {":sos:", "SOS"},        {":warning:", "Warn"},   {":check:", "OK"},
-    {":cross:", "No"},       {":sun:", "Sun"},        {":rain:", "Rain"},
-    {":food:", "Food"},      {":water:", "Water"},    {":medic:", "Medic"},
-    {":home:", "Home"},      {":car:", "Vehicle"},    {":compass:", "Compass"},
-    {":clock:", "Time"},     {":question:", "?"},
+const PresetEntry PRESET_TABLE[] = {
+    {"SOS - need help"},      {"Need medic"},          {"On my way"},
+    {"I'm safe"},             {"All clear"},           {"Meet at rally point"},
+    {"Low on supplies"},      {"Need water"},          {"Need food"},
+    {"Power is out"},         {"Moving to shelter"},   {"Low battery"},
+    {"Roger"},                {"Negative"},            {"Standby"},
 };
-const size_t EMOJI_TABLE_SIZE = sizeof(EMOJI_TABLE) / sizeof(EMOJI_TABLE[0]);
+const size_t PRESET_TABLE_SIZE = sizeof(PRESET_TABLE) / sizeof(PRESET_TABLE[0]);

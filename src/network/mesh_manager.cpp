@@ -1,5 +1,17 @@
 #include "mesh_manager.h"
 
+#include <WiFi.h>
+
+// The ESP32 Arduino core's own wifi_power_t steps (dBm * 4); see
+// mesh_manager.h for why these are mirrored here as plain data rather than
+// used directly in the shared header.
+const WifiGainOption WIFI_GAIN_TABLE[] = {
+    {"19.5 dBm", 78}, {"19 dBm", 76}, {"18.5 dBm", 74}, {"17 dBm", 68},
+    {"15 dBm", 60},   {"13 dBm", 52}, {"11 dBm", 44},   {"8.5 dBm", 34},
+    {"7 dBm", 28},    {"5 dBm", 20},  {"2 dBm", 8},     {"-1 dBm", -4},
+};
+const size_t WIFI_GAIN_TABLE_SIZE = sizeof(WIFI_GAIN_TABLE) / sizeof(WIFI_GAIN_TABLE[0]);
+
 MeshManager meshManager;
 
 void MeshManager::begin() {
@@ -19,6 +31,11 @@ void MeshManager::setChannelKey(const String &passphrase) {
     hasKey_ = passphrase.length() > 0;
 }
 
+void MeshManager::setTxPower(int8_t rawPower) {
+    txPower_ = rawPower;
+    WiFi.setTxPower(static_cast<wifi_power_t>(rawPower));
+}
+
 void MeshManager::setIdentity(const String &name) {
     name_ = name;
     if (name_.length() > 0) {
@@ -31,11 +48,10 @@ String MeshManager::nameForNode(uint32_t nodeId) const {
     return it == nodeNames_.end() ? String() : it->second;
 }
 
-void MeshManager::sendMessage(MessageType type, const String &body) {
+void MeshManager::sendMessage(const String &body) {
     Message msg;
     msg.from = mesh_.getNodeId();
     msg.ts = static_cast<uint32_t>(millis());
-    msg.type = type;
     msg.body = body;
     msg.name = name_;
 

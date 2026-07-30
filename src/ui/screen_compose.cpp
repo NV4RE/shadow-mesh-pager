@@ -26,14 +26,14 @@ void keyboardFocusEventCb(lv_event_t *e) {
 void sendTextEventCb(lv_event_t *e) {
     const char *text = lv_textarea_get_text(textarea);
     if (text != nullptr && strlen(text) > 0) {
-        meshManager.sendMessage(MessageType::Text, String(text));
+        meshManager.sendMessage(String(text));
         lv_textarea_set_text(textarea, "");
     }
 }
 
-void emojiButtonEventCb(lv_event_t *e) {
-    const char *code = static_cast<const char *>(lv_event_get_user_data(e));
-    meshManager.sendMessage(MessageType::Emoji, String(code));
+void presetButtonEventCb(lv_event_t *e) {
+    const char *text = static_cast<const char *>(lv_event_get_user_data(e));
+    meshManager.sendMessage(String(text));
 }
 
 } // namespace
@@ -57,26 +57,31 @@ lv_obj_t *create(lv_obj_t *parent) {
     lv_obj_center(sendLbl);
     lv_obj_add_event_cb(sendBtn, sendTextEventCb, LV_EVENT_CLICKED, nullptr);
 
-    lv_obj_t *emojiRow = lv_obj_create(root);
-    lv_obj_set_width(emojiRow, LV_PCT(100));
-    lv_obj_set_height(emojiRow, LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(emojiRow, LV_FLEX_FLOW_ROW_WRAP);
+    // Scrollable column of full-width buttons (flex_grow fills whatever
+    // space is left below the textarea/send button) rather than the fixed-
+    // size grid a short emoji glyph could use -- these are full phrases, so
+    // they need the width and each gets its own row.
+    lv_obj_t *presetList = lv_obj_create(root);
+    lv_obj_set_width(presetList, LV_PCT(100));
+    lv_obj_set_flex_grow(presetList, 1);
+    lv_obj_set_flex_flow(presetList, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(presetList, 2, 0);
 
-    for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-        lv_obj_t *btn = lv_button_create(emojiRow);
-        lv_obj_set_size(btn, 50, 40);
+    for (size_t i = 0; i < PRESET_TABLE_SIZE; i++) {
+        lv_obj_t *btn = lv_button_create(presetList);
+        lv_obj_set_width(btn, LV_PCT(100));
         lv_obj_t *lbl = lv_label_create(btn);
-        lv_label_set_text(lbl, EMOJI_TABLE[i].glyph);
+        lv_label_set_text(lbl, PRESET_TABLE[i].text);
         lv_obj_center(lbl);
-        void *userData = const_cast<char *>(EMOJI_TABLE[i].code);
-        lv_obj_add_event_cb(btn, emojiButtonEventCb, LV_EVENT_CLICKED, userData);
+        void *userData = const_cast<char *>(PRESET_TABLE[i].text);
+        lv_obj_add_event_cb(btn, presetButtonEventCb, LV_EVENT_CLICKED, userData);
     }
 
     // Child of this screen's own root (not the shared content area) so it
     // hides automatically whenever the compose screen itself is hidden.
     // IGNORE_LAYOUT + explicit bottom alignment takes it out of `root`'s
     // flex-column flow: as a normal flex child it was appended after the
-    // textarea/send button/emoji rows, which are already taller than the
+    // textarea/send button/preset list, which are already taller than the
     // visible content area, so it rendered scrolled off-screen -- visible
     // flag correctly cleared, but nowhere the user could see or reach it.
     keyboard = lv_keyboard_create(root);

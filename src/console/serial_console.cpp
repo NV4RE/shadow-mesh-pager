@@ -1,6 +1,7 @@
 #include "serial_console.h"
 
 #include <Arduino.h>
+#include <math.h>
 
 #ifdef HAS_RGB_LED
 #include "../led/rgb_led.h"
@@ -14,15 +15,6 @@ namespace serial_console {
 namespace {
 
 String lineBuf;
-
-const char *emojiGlyph(const String &code) {
-    for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-        if (code == EMOJI_TABLE[i].code) {
-            return EMOJI_TABLE[i].glyph;
-        }
-    }
-    return code.c_str();
-}
 
 String senderLabel(const Message &msg) {
     if (msg.from == meshManager.selfId()) {
@@ -39,10 +31,15 @@ String senderLabel(const Message &msg) {
 void printMessage(const Message &msg) {
     if (!msg.decryptable) {
         Serial.printf("[msg] %s: <undecryptable -- different channel key>\n", senderLabel(msg).c_str());
-    } else if (msg.type == MessageType::Emoji) {
-        Serial.printf("[msg] %s: [%s]\n", senderLabel(msg).c_str(), emojiGlyph(msg.body));
     } else {
         Serial.printf("[msg] %s: %s\n", senderLabel(msg).c_str(), msg.body.c_str());
+    }
+}
+
+void printGainTable() {
+    for (size_t i = 0; i < WIFI_GAIN_TABLE_SIZE; i++) {
+        Serial.printf("  %s%s\n", WIFI_GAIN_TABLE[i].label,
+                      WIFI_GAIN_TABLE[i].rawPower == meshManager.txPower() ? "  <- current" : "");
     }
 }
 
@@ -55,10 +52,12 @@ void printHelp() {
 #ifdef HAS_RGB_LED
     Serial.println(F("  /led <hex>          set the status LED color, e.g. /led ff8800"));
 #endif
-    Serial.println(F("  /emojis            list available emoji codes"));
-    Serial.println(F("  /emoji <code>      send an emoji, e.g. /emoji :wave:"));
+    Serial.println(F("  /gain [dBm]        show/set WiFi TX power, e.g. /gain 11 (no arg lists steps)"));
+    Serial.println(F("  /presets           list preset messages with their numbers"));
+    Serial.println(F("  /preset <n>        send a preset message by number, e.g. /preset 1"));
     Serial.println(F("  /topology          list known mesh nodes"));
     Serial.println(F("  /history           reprint recent message history"));
+    Serial.println(F("  /factory-reset     wipe all settings and reboot (needs /factory-reset confirm)"));
     Serial.println(F("  (anything else)    sent as a text message"));
 }
 
@@ -93,9 +92,9 @@ void printHistory() {
     }
 }
 
-void printEmojiTable() {
-    for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-        Serial.printf("  %s  (%s)\n", EMOJI_TABLE[i].code, EMOJI_TABLE[i].glyph);
+void printPresetTable() {
+    for (size_t i = 0; i < PRESET_TABLE_SIZE; i++) {
+        Serial.printf("  %2u: %s\n", static_cast<unsigned>(i + 1), PRESET_TABLE[i].text);
     }
 }
 
@@ -105,7 +104,7 @@ void handleCommand(const String &line) {
     }
 
     if (!line.startsWith("/")) {
-        meshManager.sendMessage(MessageType::Text, line);
+        meshManager.sendMessage(line);
         Serial.println("[ok] sent");
         return;
     }
@@ -140,21 +139,44 @@ void handleCommand(const String &line) {
             Serial.printf("[ok] LED set to #%06X\n", static_cast<unsigned int>(rgb));
         }
 #endif
-    } else if (cmd == "/emojis") {
-        printEmojiTable();
-    } else if (cmd == "/emoji") {
-        bool found = false;
-        for (size_t i = 0; i < EMOJI_TABLE_SIZE; i++) {
-            if (arg == EMOJI_TABLE[i].code) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            Serial.printf("[err] unknown emoji code \"%s\" -- try /emojis\n", arg.c_str());
+    } else if (cmd == "/gain") {
+        if (arg.length() == 0) {
+            Serial.printf("[gain] current: %.2f dBm\n", meshManager.txPower() / 4.0f);
+            printGainTable();
         } else {
-            meshManager.sendMessage(MessageType::Emoji, arg);
-            Serial.println("[ok] sent");
+            float target = arg.toFloat();
+            const WifiGainOption *best = &WIFI_GAIN_TABLE[0];
+            float bestDiff = fabsf(target - best->rawPower / 4.0f);
+            for (size_t i = 1; i < WIFI_GAIN_TABLE_SIZE; i++) {
+                float diff = fabsf(target - WIFI_GAIN_TABLE[i].rawPower / 4.0f);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
+                    best = &WIFI_GAIN_TABLE[i];
+                }
+            }
+            settings::setWifiGain(best->rawPower);
+            meshManager.setTxPower(best->rawPower);
+            Serial.printf("[ok] gain set to %s\n", best->label);
+        }
+    } else if (cmd == "/factory-reset") {
+        if (arg == "confirm") {
+            Serial.println(F("[ok] factory reset -- wiping settings and rebooting"));
+            settings::factoryReset();
+        } else {
+            Serial.println(F("[warn] this wipes name, channel key, gain, LED color, and touch "
+                              "calibration, then reboots."));
+            Serial.println(F("[warn] run \"/factory-reset confirm\" to proceed."));
+        }
+    } else if (cmd == "/presets") {
+        printPresetTable();
+    } else if (cmd == "/preset") {
+        int n = arg.toInt();
+        if (n < 1 || static_cast<size_t>(n) > PRESET_TABLE_SIZE) {
+            Serial.println("[err] usage: /preset <number> -- try /presets");
+        } else {
+            String text = PRESET_TABLE[n - 1].text;
+            meshManager.sendMessage(text);
+            Serial.printf("[ok] sent preset: \"%s\"\n", text.c_str());
         }
     } else if (cmd == "/topology") {
         printTopology();

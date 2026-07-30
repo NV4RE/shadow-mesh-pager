@@ -53,6 +53,15 @@
 #define MORSE_WORD_GAP_MS (MORSE_UNIT_MS * 12)        // release pause => word space
 #define MORSE_SEND_TIMEOUT_MS 3000                    // release pause => send message
 
+// --- WiFi TX power ("gain"), adjustable at runtime (UI on the CYD, /gain
+// on the serial console, both boards) and persisted to NVS. The raw values
+// below are the ESP32 Arduino core's wifi_power_t steps (dBm * 4) so they
+// can be handed straight to WiFi.setTxPower() without pulling <WiFi.h> into
+// this header -- see network/mesh_manager.h for the labeled option table.
+// 11dBm is the same brownout-safe default main_heltec.cpp used to hardcode
+// (see its comment on USB power spikes); now tunable instead of fixed.
+#define DEFAULT_WIFI_GAIN_RAW 44 // 11dBm
+
 // --- Onboard SSD1306 OLED (I2C) -- heltec_wifi_lora_32_v2 target only.
 // Pins per the board's own pins_arduino.h variant; Vext must be pulled LOW
 // to power the OLED before it will respond on I2C. ---

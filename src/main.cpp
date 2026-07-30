@@ -23,6 +23,7 @@ void setup() {
     rgb_led::begin();
     rgb_led::setColorHex(settings::getLedColor());
     meshManager.begin();
+    meshManager.setTxPower(settings::getWifiGain());
     serial_console::begin();
     morse_input::begin();
     morse_input::onStatusChanged(ui::setMorseStatus);

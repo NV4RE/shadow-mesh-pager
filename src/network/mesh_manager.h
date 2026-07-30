@@ -19,6 +19,18 @@
 #include "../crypto/aes_channel.h"
 #include "../message/message.h"
 
+// Labeled WiFi TX power ("gain") steps, in the ESP32 Arduino core's raw
+// wifi_power_t units (dBm * 4) -- see MeshManager::setTxPower. Shared by
+// the CYD's gain dropdown (screen_settings.cpp) and the serial console's
+// /gain command so both present/accept the same discrete steps the radio
+// actually supports, rather than an arbitrary dBm range.
+struct WifiGainOption {
+    const char *label; // e.g. "11 dBm"
+    int8_t rawPower;
+};
+extern const WifiGainOption WIFI_GAIN_TABLE[];
+extern const size_t WIFI_GAIN_TABLE_SIZE;
+
 // Wraps painlessMesh: one fixed/shared physical mesh (MESH_SSID/PASSWORD)
 // that every device joins and relays traffic on regardless of channel key --
 // the AES passphrase (see setChannelKey) is the real "sub network" secret
@@ -39,6 +51,11 @@ public:
     void setChannelKey(const String &passphrase);
     bool hasChannelKey() const { return hasKey_; }
 
+    // WiFi TX power ("gain"), raw wifi_power_t units -- see WIFI_GAIN_TABLE.
+    // Safe to call any time after begin() (WiFi is already up by then).
+    void setTxPower(int8_t rawPower);
+    int8_t txPower() const { return txPower_; }
+
     // Display name, stamped in the clear on every outgoing message (see
     // message.h) -- decoupled from AES channel readability.
     void setIdentity(const String &name);
@@ -49,7 +66,7 @@ public:
     // node hasn't been heard from yet.
     String nameForNode(uint32_t nodeId) const;
 
-    void sendMessage(MessageType type, const String &body);
+    void sendMessage(const String &body);
 
     const std::deque<Message> &history() const { return history_; }
 
@@ -78,6 +95,7 @@ private:
     crypto::AesKey channelKey_{};
     bool hasKey_ = false;
     String name_;
+    int8_t txPower_ = DEFAULT_WIFI_GAIN_RAW;
 
     std::deque<Message> history_;
     std::deque<String> seenIds_;

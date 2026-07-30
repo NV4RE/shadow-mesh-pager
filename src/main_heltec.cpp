@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <WiFi.h>
 
 #include "console/serial_console.h"
 #include "input/morse_input.h"
@@ -20,10 +19,11 @@ void setup() {
     // Default WiFi TX power draws current spikes (~300-500mA) that a lot of
     // USB ports/cables can't supply cleanly, tripping the ESP32's brownout
     // detector into a boot loop -- most common when powered straight off a
-    // computer's USB port rather than a dedicated wall adapter. Knocking TX
-    // power down reduces those spikes; if boot loops persist, try a
-    // different USB port/cable or a proper 5V/1A+ power source.
-    WiFi.setTxPower(WIFI_POWER_11dBm);
+    // computer's USB port rather than a dedicated wall adapter. The
+    // persisted gain (DEFAULT_WIFI_GAIN_RAW, config.h) knocks TX power down
+    // to reduce those spikes by default; if boot loops persist, try a lower
+    // /gain, a different USB port/cable, or a proper 5V/1A+ power source.
+    meshManager.setTxPower(settings::getWifiGain());
 
     serial_console::begin();
     oled_display::begin();

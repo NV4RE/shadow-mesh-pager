@@ -28,7 +28,17 @@ void setNetworkKey(const String &key);
 uint32_t getLedColor(); // 0xRRGGBB, defaults to off (0)
 void setLedColor(uint32_t rgb);
 
+// WiFi TX power ("gain"), raw wifi_power_t units -- see
+// network/mesh_manager.h's WIFI_GAIN_TABLE for the labeled steps.
+int8_t getWifiGain();
+void setWifiGain(int8_t rawPower);
+
 TouchCalibration getCalibration();
 void setCalibration(const TouchCalibration &cal);
+
+// Wipes every persisted setting (name, key, calibration, gain, LED color,
+// setup-complete flag) and reboots into a clean first-boot state. Does not
+// return.
+void factoryReset();
 
 } // namespace settings
