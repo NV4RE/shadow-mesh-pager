@@ -36,6 +36,18 @@ pio device monitor -b 115200         # serial console / logs
 /key our-shared-passphrase
 ```
 
+## BOOT0 button: Morse code input
+
+Both boards have a BOOT0/PRG button wired to GPIO0. Once booted, it doubles as a one-button Morse code input, so you can compose and send a message without touch or serial:
+
+- **Tap** = dot, **hold** = dash (long/short press, decoded per-letter using International Morse code, A-Z/0-9).
+- Pause briefly after a letter's dots/dashes to move on to the next letter; pause longer to insert a word space.
+- Pause for about 3 seconds after your last letter and the message sends automatically.
+
+Live feedback while tapping: the CYD shows a status bar above the nav bar with the decoded text and the in-progress dot/dash pattern; the Heltec's OLED overlays the same on its bottom line. Both also log every symbol, decoded letter, and sent message to the serial console.
+
+Timings (dot/dash threshold, letter/word gaps, send timeout) are tunable via `MORSE_*` constants in `src/config.h` if the defaults feel too fast/slow for manual pressing.
+
 ## Serial console
 
 Available on every board, always on, regardless of whether a screen is attached:
@@ -73,6 +85,7 @@ src/
   network/mesh_manager.*    painlessMesh wrapper: history, dedup, topology, identity
   storage/settings_store.*  NVS-backed persistent settings
   console/serial_console.*  Shared serial command interface
+  input/morse_input.*       BOOT0-button-as-Morse-code input (see above)
 
   display/display_driver.*  TFT_eSPI + LVGL + XPT2046 touch glue      (CYD only)
   led/rgb_led.*              Discrete RGB LED (PWM, active-low)        (CYD only)

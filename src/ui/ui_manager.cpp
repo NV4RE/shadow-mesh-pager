@@ -14,6 +14,8 @@ namespace {
 
 lv_obj_t *content = nullptr;
 lv_obj_t *navBar = nullptr;
+lv_obj_t *morseBar = nullptr;
+lv_obj_t *morseLabel = nullptr;
 
 lv_obj_t *messagesScreen = nullptr;
 lv_obj_t *composeScreen = nullptr;
@@ -48,6 +50,16 @@ void begin() {
     lv_obj_set_width(content, LV_PCT(100));
     lv_obj_set_flex_grow(content, 1);
     lv_obj_set_style_pad_all(content, 4, 0);
+
+    morseBar = lv_obj_create(root);
+    lv_obj_set_width(morseBar, LV_PCT(100));
+    lv_obj_set_height(morseBar, LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_all(morseBar, 4, 0);
+    lv_obj_add_flag(morseBar, LV_OBJ_FLAG_HIDDEN);
+
+    morseLabel = lv_label_create(morseBar);
+    lv_label_set_long_mode(morseLabel, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(morseLabel, LV_PCT(100));
 
     navBar = lv_obj_create(root);
     lv_obj_set_width(navBar, LV_PCT(100));
@@ -99,6 +111,19 @@ void show(Screen s) {
             screen_settings::refresh();
             break;
     }
+}
+
+void setMorseStatus(const String &decoded, const String &symbols) {
+    if (!morseBar) {
+        return;
+    }
+    if (decoded.length() == 0 && symbols.length() == 0) {
+        lv_obj_add_flag(morseBar, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+    lv_obj_clear_flag(morseBar, LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text_fmt(morseLabel, "Morse: %s%s%s", decoded.c_str(),
+                           decoded.length() > 0 && symbols.length() > 0 ? " " : "", symbols.c_str());
 }
 
 } // namespace ui
