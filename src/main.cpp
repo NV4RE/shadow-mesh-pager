@@ -2,6 +2,7 @@
 
 #include "console/serial_console.h"
 #include "display/display_driver.h"
+#include "input/morse_input.h"
 #include "led/rgb_led.h"
 #include "network/mesh_manager.h"
 #include "storage/settings_store.h"
@@ -23,6 +24,8 @@ void setup() {
     rgb_led::setColorHex(settings::getLedColor());
     meshManager.begin();
     serial_console::begin();
+    morse_input::begin();
+    morse_input::onStatusChanged(ui::setMorseStatus);
 
     if (settings::isSetupComplete()) {
         settings::TouchCalibration cal = settings::getCalibration();
@@ -42,4 +45,5 @@ void loop() {
     meshManager.update();
     display::tick();
     serial_console::tick();
+    morse_input::tick();
 }

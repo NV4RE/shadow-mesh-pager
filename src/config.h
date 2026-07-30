@@ -39,6 +39,20 @@
 #define RGB_LED_PWM_FREQ_HZ 5000
 #define RGB_LED_PWM_RESOLUTION_BITS 8
 
+// --- BOOT0 button (GPIO0 strapping pin) as a one-button Morse code input --
+// present as a physical button on both boards (labeled BOOT/PRG), free for
+// GPIO use once boot has completed. Wired to GND when pressed with an
+// external pull-up already on the board, so INPUT_PULLUP is belt-and-braces.
+// Timings are generous for a manually-pressed tactile button rather than a
+// real telegraph key; MORSE_UNIT_MS is the only one you should need to
+// tune (the rest scale off it using standard-ish ratios). ---
+#define BOOT_BUTTON_PIN 0
+#define MORSE_UNIT_MS 150
+#define MORSE_DASH_THRESHOLD_MS (MORSE_UNIT_MS * 2)  // press >= this => dash, else dot
+#define MORSE_LETTER_GAP_MS (MORSE_UNIT_MS * 5)       // release pause => letter finished
+#define MORSE_WORD_GAP_MS (MORSE_UNIT_MS * 12)        // release pause => word space
+#define MORSE_SEND_TIMEOUT_MS 3000                    // release pause => send message
+
 // --- Onboard SSD1306 OLED (I2C) -- heltec_wifi_lora_32_v2 target only.
 // Pins per the board's own pins_arduino.h variant; Vext must be pulled LOW
 // to power the OLED before it will respond on I2C. ---

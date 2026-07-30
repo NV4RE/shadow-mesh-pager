@@ -2,6 +2,7 @@
 #include <WiFi.h>
 
 #include "console/serial_console.h"
+#include "input/morse_input.h"
 #include "network/mesh_manager.h"
 #include "oled/oled_display.h"
 #include "storage/settings_store.h"
@@ -26,6 +27,8 @@ void setup() {
 
     serial_console::begin();
     oled_display::begin();
+    morse_input::begin();
+    morse_input::onStatusChanged(oled_display::setMorseStatus);
 
     if (settings::isSetupComplete()) {
         meshManager.setIdentity(settings::getName());
@@ -36,4 +39,5 @@ void setup() {
 void loop() {
     meshManager.update();
     serial_console::tick();
+    morse_input::tick();
 }
