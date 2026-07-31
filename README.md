@@ -10,16 +10,18 @@ Every device forms a WiFi mesh with every other device in radio range and relays
 |---|---|---|
 | ESP32 CYD (`ESP32-2432S028R`, resistive touch) | Full touchscreen UI + serial console | Message list, compose w/ on-screen keyboard + preset messages, network map, RGB LED color picker, settings |
 | Heltec WiFi LoRa 32 (V2) | Read-only OLED + serial console | No touch input on this board — the onboard SSD1306 OLED just displays the last few incoming messages; everything else (sending, configuration) happens over serial |
+| TTGO/LilyGo T-Display | Read-only TFT + serial console | No touch input on this board — the onboard ST7789 TFT just displays the last few incoming messages, same read-only presentation as the Heltec's OLED; everything else happens over serial |
 
-Both boards run the same mesh/crypto/message/settings core — only the presentation layer differs.
+All boards run the same mesh/crypto/message/settings core — only the presentation layer differs.
 
 ## Building
 
-Requires [PlatformIO](https://platformio.org/). Two environments are defined in `platformio.ini`:
+Requires [PlatformIO](https://platformio.org/). Three environments are defined in `platformio.ini`:
 
 ```sh
 pio run -e esp32dev                  # CYD
 pio run -e heltec_wifi_lora_32_v2    # Heltec WiFi LoRa 32 V2
+pio run -e ttgo_t_display            # TTGO/LilyGo T-Display
 
 pio run -e esp32dev -t upload        # flash over USB
 pio device monitor -b 115200         # serial console / logs
@@ -29,7 +31,7 @@ pio device monitor -b 115200         # serial console / logs
 
 **CYD**: on first boot, a wizard walks you through touch calibration (tap two targets), your display name, and the channel key. Everything's editable later from the Settings tab, which also has a "Recalibrate touch" button.
 
-**Heltec / headless boards**: there's no wizard — open the serial monitor at 115200 baud and configure directly:
+**Heltec / T-Display / headless boards**: there's no wizard — open the serial monitor at 115200 baud and configure directly:
 
 ```
 /name Alice
@@ -38,13 +40,13 @@ pio device monitor -b 115200         # serial console / logs
 
 ## BOOT0 button: Morse code input
 
-Both boards have a BOOT0/PRG button wired to GPIO0. Once booted, it doubles as a one-button Morse code input, so you can compose and send a message without touch or serial:
+All boards have a BOOT0/PRG button wired to GPIO0. Once booted, it doubles as a one-button Morse code input, so you can compose and send a message without touch or serial:
 
 - **Tap** = dot, **hold** = dash (long/short press, decoded per-letter using International Morse code, A-Z/0-9).
 - Pause briefly after a letter's dots/dashes to move on to the next letter; pause longer to insert a word space.
 - Pause for about 3 seconds after your last letter and the message sends automatically.
 
-Live feedback while tapping: the CYD shows a status bar above the nav bar with the decoded text and the in-progress dot/dash pattern; the Heltec's OLED overlays the same on its bottom line. Both also log every symbol, decoded letter, and sent message to the serial console.
+Live feedback while tapping: the CYD shows a status bar above the nav bar with the decoded text and the in-progress dot/dash pattern; the Heltec's OLED and the T-Display's TFT both overlay the same on their bottom line. All three also log every symbol, decoded letter, and sent message to the serial console.
 
 Timings (dot/dash threshold, letter/word gaps, send timeout) are tunable via `MORSE_*` constants in `src/config.h` if the defaults feel too fast/slow for manual pressing.
 
@@ -102,6 +104,7 @@ Defaults to 11dBm (`DEFAULT_WIFI_GAIN_RAW`, `src/config.h`) -- the level the Hel
 src/
   main.cpp                CYD entry point
   main_heltec.cpp          Heltec entry point
+  main_ttgo.cpp            T-Display entry point
   config.h                 Pins, mesh/crypto constants, shared across targets
 
   crypto/aes_channel.*      AES-256-CBC + key derivation + integrity check
@@ -115,12 +118,13 @@ src/
   led/rgb_led.*              Discrete RGB LED (PWM, active-low)        (CYD only)
   ui/                        LVGL screens + setup wizard               (CYD only)
   oled/oled_display.*        Read-only SSD1306 message view            (Heltec only)
+  tft/tft_display.*          Read-only ST7789 message view             (T-Display only)
 
 include/lv_conf.h           LVGL configuration                         (CYD only)
 extra_scripts/               PlatformIO pre-build hooks
 ```
 
-`platformio.ini`'s `build_src_filter` keeps each target's build to only what it needs — the Heltec build never touches LVGL/TFT_eSPI/touch code at all.
+`platformio.ini`'s `build_src_filter` keeps each target's build to only what it needs — the Heltec and T-Display builds never touch LVGL/TFT_eSPI-with-touch code at all (the T-Display target does pull in TFT_eSPI, but only its plain text-drawing API, not the LVGL/XPT2046 stack the CYD uses).
 
 ## Known limitations
 
