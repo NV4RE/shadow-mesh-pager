@@ -113,8 +113,16 @@ void showTextStep() {
     lv_obj_center(btnLbl);
     lv_obj_add_event_cb(nextBtn, nextEventCb, LV_EVENT_CLICKED, nullptr);
 
+    // Child of this step's own root (torn down each step) but pulled out of
+    // its flex-column flow -- see screen_compose.cpp's create() for why: as
+    // a normal flex child with no explicit height it renders scrolled off
+    // below the title/textarea/button, with its hidden flag correctly
+    // cleared but nowhere the user can see or reach it.
     keyboard = lv_keyboard_create(root);
     lv_obj_set_width(keyboard, LV_PCT(100));
+    lv_obj_set_height(keyboard, LV_PCT(50));
+    lv_obj_add_flag(keyboard, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_align(keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
     lv_keyboard_set_textarea(keyboard, textarea);
 }
